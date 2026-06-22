@@ -686,6 +686,25 @@ p {
   justify-content: flex-end;
 }
 
+.ai-panel {
+  margin-top: 18px;
+  animation: panelIn 300ms var(--spring) both;
+}
+
+.ai-output {
+  color: #414a52;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.ai-output.loading {
+  color: var(--muted);
+}
+
+.ai-output.error {
+  color: #a33a4f;
+}
+
 @keyframes heroContentIn {
   from {
     opacity: 0;

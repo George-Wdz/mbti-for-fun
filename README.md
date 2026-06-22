@@ -9,3 +9,21 @@
 ## 说明
 
 本工具用于自我理解和沟通参考，不是官方 MBTI 认证测评，也不用于临床诊断。
+
+## AI 深度分析
+
+前端会调用 `/api/analyze`。这个接口需要部署到支持 Serverless Functions 的平台，例如 Vercel。
+
+在 Vercel 项目环境变量中设置：
+
+```text
+MINIMAX_API_KEY=你的 MiniMax token
+```
+
+可选模型变量：
+
+```text
+MINIMAX_MODEL=MiniMax-M1
+```
+
+不要把 MiniMax token 写进 `app.js` 或其他前端文件。GitHub Pages 只能托管静态页面，不能运行 `/api/analyze`。

@@ -229,6 +229,7 @@ const state = {
   answers: Array(questions.length).fill(null),
   reviewMode: false,
   heroLineIndex: 0,
+  lastReport: null,
 };
 
 const els = {
@@ -242,6 +243,7 @@ const els = {
   nextButton: document.querySelector("#next-button"),
   retakeButton: document.querySelector("#retake-button"),
   reviewButton: document.querySelector("#review-button"),
+  aiButton: document.querySelector("#ai-button"),
   questionCounter: document.querySelector("#question-counter"),
   progressPercent: document.querySelector("#progress-percent"),
   progressBar: document.querySelector("#progress-bar"),
@@ -261,6 +263,8 @@ const els = {
   strengthList: document.querySelector("#strength-list"),
   growthList: document.querySelector("#growth-list"),
   reliabilityText: document.querySelector("#reliability-text"),
+  aiPanel: document.querySelector("#ai-panel"),
+  aiOutput: document.querySelector("#ai-output"),
 };
 
 function showView(view) {
@@ -576,12 +580,26 @@ function renderResults(sample = false) {
   const answers = sample ? buildSampleAnswers("ENFP") : state.answers;
   const { type, result, subScores, consistencyReport, confidence, neutralCount, consistency } = scoreAnswers(answers);
   const analysis = getAnalysis(type, result, confidence, neutralCount, consistency);
+  state.lastReport = {
+    type,
+    confidence,
+    dimensions: result,
+    subScores,
+    consistencyReport,
+    summary: analysis.summary,
+    strengths: analysis.strengths,
+    growth: analysis.growth,
+    reliability: analysis.reliability,
+  };
 
   els.typeCode.textContent = type;
   els.typeName.textContent = analysis.name;
   els.confidenceScore.textContent = `${confidence}`;
   els.summaryText.textContent = analysis.summary;
   els.reliabilityText.textContent = analysis.reliability;
+  els.aiPanel.classList.add("hidden");
+  els.aiOutput.textContent = "";
+  els.aiOutput.className = "ai-output";
 
   els.strengthList.innerHTML = analysis.strengths.map((item) => `<li>${item}</li>`).join("");
   els.growthList.innerHTML = analysis.growth.map((item) => `<li>${item}</li>`).join("");
@@ -669,6 +687,37 @@ function consistencyAdvice(report) {
   }
   return "反应一致性处于可接受范围；接近中线的维度仍建议按情境偏好理解。";
 }
+async function generateAiAnalysis() {
+  if (!state.lastReport) return;
+
+  els.aiPanel.classList.remove("hidden");
+  els.aiOutput.className = "ai-output loading";
+  els.aiOutput.textContent = "正在请 AI 翻阅你的偏好档案。它不会戴水晶球，但会看数据。";
+  els.aiButton.disabled = true;
+
+  try {
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ report: state.lastReport }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || "AI 接口暂时不可用。");
+    }
+
+    els.aiOutput.className = "ai-output";
+    els.aiOutput.textContent = data.analysis || "AI 没有返回内容。";
+  } catch (error) {
+    els.aiOutput.className = "ai-output error";
+    els.aiOutput.textContent =
+      `${error.message}\n\n如果你正在 GitHub Pages 上访问，这是正常的：GitHub Pages 只能托管静态页面，不能运行 /api/analyze。请把项目部署到 Vercel，并在 Vercel 环境变量里设置 MINIMAX_API_KEY。`;
+  } finally {
+    els.aiButton.disabled = false;
+  }
+}
+
 function buildSampleAnswers(type) {
   return questions.map((question) => {
     const dimension = dimensions[question.dimension];
@@ -707,6 +756,7 @@ els.reviewButton.addEventListener("click", () => {
   state.index = 0;
   startTest(false);
 });
+els.aiButton.addEventListener("click", generateAiAnalysis);
 
 document.addEventListener("click", (event) => {
   const button = event.target.closest("button");
