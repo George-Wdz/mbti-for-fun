@@ -592,8 +592,8 @@ function renderResults(sample = false) {
   Object.entries(result).forEach(([key, value]) => {
     const dim = dimensions[key];
     const row = document.createElement("div");
-    const fillWidth = Math.abs(value.leftPercent - 50) * 2;
-    const fillLeft = value.leftPercent >= 50 ? 50 : 50 - fillWidth;
+    const fillWidth = value.strength / 2;
+    const fillLeft = value.score >= 0 ? 50 - fillWidth : 50;
     row.className = "dim-row";
     row.innerHTML = `
       <span class="dim-label">${dim.left}</span>
@@ -606,6 +606,8 @@ function renderResults(sample = false) {
     els.dimensionBars.appendChild(row);
   });
 
+  renderSubscores(subScores);
+  renderConsistencyReport(consistencyReport);
   showView(els.resultView);
 }
 
