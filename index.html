@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MBTI 人格偏好测评</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero" id="intro-view">
+        <div class="wave-hero" aria-label="MBTI 人格偏好测评">
+          <div class="wave-layer wave-one" aria-hidden="true"></div>
+          <div class="wave-layer wave-two" aria-hidden="true"></div>
+          <div class="wave-layer wave-three" aria-hidden="true"></div>
+          <div class="wave-content">
+            <p class="eyebrow wave-eyebrow">108 题 · 四维画像 · 一致性侦测</p>
+            <h1>MBTI测试</h1>
+            <p>只会稍微揭穿你。</p>
+          </div>
+        </div>
+
+        <div class="intro-panel">
+          <div class="hero-copy">
+            <p class="eyebrow">非官方认证</p>
+            <h2 id="hero-line">进来坐坐，看看你的大脑平时把门开向哪边。</h2>
+            <p class="hero-lead">
+              108 道题，给出类型、维度子分和反应一致性报告。
+            </p>
+            <div class="hero-actions">
+              <button class="primary-button" id="start-button" type="button">开始测评</button>
+              <button class="secondary-button" id="sample-button" type="button">查看结果样例</button>
+            </div>
+          </div>
+
+          <div class="signal-panel compact" aria-label="测评维度预览">
+            <div class="dimension-stack">
+              <div><b>E / I</b><span>精力来源</span></div>
+              <div><b>S / N</b><span>信息偏好</span></div>
+              <div><b>T / F</b><span>决策依据</span></div>
+              <div><b>J / P</b><span>生活节奏</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notice-strip">
+          小字条：这是自我理解工具，不是官方 MBTI 认证测评，也不是临床诊断。
+        </div>
+      </section>
+
+      <section class="test-view hidden" id="test-view" aria-live="polite">
+        <header class="test-header">
+          <button class="icon-button" id="back-button" type="button" aria-label="返回首页">
+            ←
+          </button>
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <span id="question-counter">第 1 / 108 题</span>
+              <span id="progress-percent">2%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-bar" id="progress-bar"></div>
+            </div>
+          </div>
+        </header>
+
+        <div class="question-stage" id="question-stage">
+          <p class="question-kicker" id="question-kicker">精力来源</p>
+          <h2 id="question-text"></h2>
+          <div class="scale" id="scale" role="radiogroup" aria-label="作答选项"></div>
+        </div>
+
+        <footer class="test-footer">
+          <button class="secondary-button" id="prev-button" type="button">上一题</button>
+          <button class="primary-button" id="next-button" type="button">下一题</button>
+        </footer>
+      </section>
+
+      <section class="result-view hidden" id="result-view">
+        <header class="result-hero">
+          <div>
+            <p class="eyebrow">测评结果</p>
+            <h1 id="type-code">INTJ</h1>
+            <p id="type-name" class="type-name"></p>
+          </div>
+          <div class="confidence-badge">
+            <span id="confidence-score">--</span>
+            <small>可信度</small>
+          </div>
+        </header>
+
+        <div class="result-grid">
+          <section class="analysis-panel">
+            <h2>总体画像</h2>
+            <p id="summary-text"></p>
+          </section>
+
+          <section class="analysis-panel">
+            <h2>维度强度</h2>
+            <div class="bars" id="dimension-bars"></div>
+          </section>
+
+          <section class="analysis-panel wide">
+            <h2>维度子分</h2>
+            <div class="subscore-grid" id="subscore-grid"></div>
+          </section>
+
+          <section class="analysis-panel">
+            <h2>优势倾向</h2>
+            <ul id="strength-list"></ul>
+          </section>
+
+          <section class="analysis-panel">
+            <h2>成长提醒</h2>
+            <ul id="growth-list"></ul>
+          </section>
+
+          <section class="analysis-panel wide">
+            <h2>可信度说明</h2>
+            <p id="reliability-text"></p>
+          </section>
+
+          <section class="analysis-panel wide">
+            <h2>反应一致性报告</h2>
+            <div class="consistency-grid" id="consistency-grid"></div>
+            <p class="consistency-note" id="consistency-note"></p>
+          </section>
+        </div>
+
+        <div class="result-actions">
+          <button class="secondary-button" id="retake-button" type="button">重新测评</button>
+          <button class="primary-button" id="review-button" type="button">回看答案</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
