@@ -267,6 +267,7 @@ const els = {
   aiPanel: document.querySelector("#ai-panel"),
   aiOutput: document.querySelector("#ai-output"),
   aiDownloadButton: document.querySelector("#ai-download-button"),
+  printReport: document.querySelector("#print-report"),
 };
 
 function showView(view) {
@@ -745,40 +746,18 @@ function downloadAiPdf() {
 
   const { summary, fullAnalysis, createdAt, report } = state.lastAiAnalysis;
   const type = report?.type || "MBTI";
-  const doc = window.open("", "_blank");
-  if (!doc) {
-    alert("浏览器拦截了报告窗口。请允许此网站弹窗后再点击下载报告。");
-    return;
-  }
 
-  doc.document.write(`<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <title>${escapeHtml(type)} AI 深度分析</title>
-  <style>
-    @page { margin: 18mm; }
-    body { margin: 0; color: #151719; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; line-height: 1.75; }
-    h1 { margin: 0 0 8px; font-size: 28px; }
-    h2 { margin: 24px 0 8px; font-size: 18px; }
-    .meta { color: #667085; margin-bottom: 22px; }
-    .box { padding: 14px 16px; border: 1px solid #d9dee7; border-radius: 10px; background: #f7f8fa; }
-    .content { white-space: pre-wrap; }
-  </style>
-</head>
-<body>
-  <h1>${escapeHtml(type)} AI 深度分析报告</h1>
-  <div class="meta">生成时间：${escapeHtml(createdAt)} · 非官方 MBTI 风格自评报告</div>
-  <h2>页面摘要</h2>
-  <div class="box">${escapeHtml(summary)}</div>
-  <h2>完整分析</h2>
-  <div class="content">${escapeHtml(fullAnalysis)}</div>
-  <script>window.onload = () => { window.print(); };</script>
-</body>
-</html>`);
-  doc.document.close();
+  els.printReport.innerHTML = `
+    <h1>${escapeHtml(type)} AI 深度分析报告</h1>
+    <div class="print-meta">生成时间：${escapeHtml(createdAt)} · 非官方 MBTI 风格自评报告</div>
+    <h2>页面摘要</h2>
+    <div class="print-box">${escapeHtml(summary)}</div>
+    <h2>完整分析</h2>
+    <div class="print-content">${escapeHtml(fullAnalysis)}</div>
+  `;
+
+  window.setTimeout(() => window.print(), 30);
 }
-
 function escapeHtml(value) {
   return String(value || "")
     .replace(/&/g, "&amp;")
