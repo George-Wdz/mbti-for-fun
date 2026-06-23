@@ -745,9 +745,9 @@ function downloadAiPdf() {
 
   const { summary, fullAnalysis, createdAt, report } = state.lastAiAnalysis;
   const type = report?.type || "MBTI";
-  const doc = window.open("", "_blank", "noopener,noreferrer");
+  const doc = window.open("", "_blank");
   if (!doc) {
-    alert("浏览器拦截了弹窗。请允许弹窗后再点击下载 PDF。");
+    alert("浏览器拦截了报告窗口。请允许此网站弹窗后再点击下载报告。");
     return;
   }
 
