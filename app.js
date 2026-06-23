@@ -695,7 +695,7 @@ async function generateAiAnalysis() {
   els.aiPanel.classList.remove("hidden");
   els.aiDownloadButton.classList.add("hidden");
   els.aiOutput.className = "ai-output loading";
-  els.aiOutput.textContent = "正在生成摘要。完整报告会藏进 PDF 里，页面先保持清爽。";
+  els.aiOutput.textContent = "正在生成分析摘要，完整版在PDF里。";
   els.aiButton.disabled = true;
 
   try {
