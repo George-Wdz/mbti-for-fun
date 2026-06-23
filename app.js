@@ -230,6 +230,7 @@ const state = {
   reviewMode: false,
   heroLineIndex: 0,
   lastReport: null,
+  lastAiAnalysis: null,
 };
 
 const els = {
@@ -265,6 +266,7 @@ const els = {
   reliabilityText: document.querySelector("#reliability-text"),
   aiPanel: document.querySelector("#ai-panel"),
   aiOutput: document.querySelector("#ai-output"),
+  aiDownloadButton: document.querySelector("#ai-download-button"),
 };
 
 function showView(view) {
@@ -691,8 +693,9 @@ async function generateAiAnalysis() {
   if (!state.lastReport) return;
 
   els.aiPanel.classList.remove("hidden");
+  els.aiDownloadButton.classList.add("hidden");
   els.aiOutput.className = "ai-output loading";
-  els.aiOutput.textContent = "正在请 AI 翻阅你的偏好档案。它不会戴水晶球，但会看数据。";
+  els.aiOutput.textContent = "正在生成摘要。完整报告会藏进 PDF 里，页面先保持清爽。";
   els.aiButton.disabled = true;
 
   try {
@@ -707,8 +710,19 @@ async function generateAiAnalysis() {
       throw new Error(data.error || "AI 接口暂时不可用。");
     }
 
+    const summary = stripThink(data.summary || data.analysis || "AI 没有返回摘要。").trim();
+    const fullAnalysis = stripThink(data.fullAnalysis || data.analysis || summary).trim();
+
+    state.lastAiAnalysis = {
+      summary,
+      fullAnalysis,
+      createdAt: new Date().toLocaleString("zh-CN"),
+      report: state.lastReport,
+    };
+
     els.aiOutput.className = "ai-output";
-    els.aiOutput.textContent = data.analysis || "AI 没有返回内容。";
+    els.aiOutput.textContent = summary;
+    els.aiDownloadButton.classList.remove("hidden");
   } catch (error) {
     els.aiOutput.className = "ai-output error";
     els.aiOutput.textContent =
@@ -718,6 +732,61 @@ async function generateAiAnalysis() {
   }
 }
 
+function stripThink(text) {
+  return String(text || "")
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .replace(/<thinking>[\s\S]*?<\/thinking>/gi, "")
+    .replace(/<think>[\s\S]*$/gi, "")
+    .trim();
+}
+
+function downloadAiPdf() {
+  if (!state.lastAiAnalysis) return;
+
+  const { summary, fullAnalysis, createdAt, report } = state.lastAiAnalysis;
+  const type = report?.type || "MBTI";
+  const doc = window.open("", "_blank", "noopener,noreferrer");
+  if (!doc) {
+    alert("浏览器拦截了弹窗。请允许弹窗后再点击下载 PDF。");
+    return;
+  }
+
+  doc.document.write(`<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>${escapeHtml(type)} AI 深度分析</title>
+  <style>
+    @page { margin: 18mm; }
+    body { margin: 0; color: #151719; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; line-height: 1.75; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin: 24px 0 8px; font-size: 18px; }
+    .meta { color: #667085; margin-bottom: 22px; }
+    .box { padding: 14px 16px; border: 1px solid #d9dee7; border-radius: 10px; background: #f7f8fa; }
+    .content { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>${escapeHtml(type)} AI 深度分析报告</h1>
+  <div class="meta">生成时间：${escapeHtml(createdAt)} · 非官方 MBTI 风格自评报告</div>
+  <h2>页面摘要</h2>
+  <div class="box">${escapeHtml(summary)}</div>
+  <h2>完整分析</h2>
+  <div class="content">${escapeHtml(fullAnalysis)}</div>
+  <script>window.onload = () => { window.print(); };</script>
+</body>
+</html>`);
+  doc.document.close();
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 function buildSampleAnswers(type) {
   return questions.map((question) => {
     const dimension = dimensions[question.dimension];
@@ -757,6 +826,7 @@ els.reviewButton.addEventListener("click", () => {
   startTest(false);
 });
 els.aiButton.addEventListener("click", generateAiAnalysis);
+els.aiDownloadButton.addEventListener("click", downloadAiPdf);
 
 document.addEventListener("click", (event) => {
   const button = event.target.closest("button");

@@ -31,15 +31,15 @@ module.exports = async function handler(request, response) {
           {
             role: "system",
             content:
-              "你是一名严谨但表达生动的人格测评分析助手。不要声称这是官方 MBTI 认证，也不要做临床诊断。基于用户的非官方自评结果，输出中文分析，语气神秘、幽默、克制。重点解释维度强度、子分、反应一致性、优势、风险和具体建议。",
+              "你是一名严谨但表达生动的人格测评分析助手。不要输出思考过程，不要输出 <think> 标签。不要声称这是官方 MBTI 认证，也不要做临床诊断。只返回合法 JSON，格式为 {\"summary\":\"...\",\"fullAnalysis\":\"...\"}。summary 用 120-180 字，fullAnalysis 用中文分段，包含优势、风险、学习/工作/关系建议。",
           },
           {
             role: "user",
             content: buildPrompt(report),
           },
         ],
-        temperature: 0.65,
-        max_tokens: 1200,
+        temperature: 0.55,
+        max_tokens: 2400,
       }),
     });
 
@@ -50,17 +50,47 @@ module.exports = async function handler(request, response) {
       });
     }
 
-    const analysis =
-      data.choices?.[0]?.message?.content ||
-      data.choices?.[0]?.text ||
-      data.reply ||
-      "";
+    const raw = stripThink(
+      data.choices?.[0]?.message?.content || data.choices?.[0]?.text || data.reply || ""
+    );
+    const parsed = parseAiJson(raw);
 
-    return response.status(200).json({ analysis });
+    return response.status(200).json({
+      summary: stripThink(parsed.summary || makeSummary(raw)),
+      fullAnalysis: stripThink(parsed.fullAnalysis || raw),
+    });
   } catch (error) {
     return response.status(500).json({ error: error.message || "AI analysis failed." });
   }
 };
+
+function stripThink(text) {
+  return String(text || "")
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .replace(/<thinking>[\s\S]*?<\/thinking>/gi, "")
+    .replace(/<think>[\s\S]*$/gi, "")
+    .trim();
+}
+
+function parseAiJson(text) {
+  const clean = stripThink(text).replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
+  try {
+    return JSON.parse(clean);
+  } catch (_) {
+    const match = clean.match(/\{[\s\S]*\}/);
+    if (!match) return {};
+    try {
+      return JSON.parse(match[0]);
+    } catch (__) {
+      return {};
+    }
+  }
+}
+
+function makeSummary(text) {
+  const clean = stripThink(text).replace(/\s+/g, " ").trim();
+  return clean.length > 220 ? `${clean.slice(0, 220)}...` : clean;
+}
 
 function buildPrompt(report) {
   const dims = Object.entries(report.dimensions || {})
@@ -79,7 +109,8 @@ function buildPrompt(report) {
   const consistency = report.consistencyReport || {};
 
   return `
-请基于以下 MBTI 风格的原创自评结果生成深度分析：
+请基于以下 MBTI 风格的原创自评结果生成分析。不要输出思考过程，不要输出 <think> 标签。必须只返回 JSON：
+{"summary":"120-180 字摘要，只说最重要结论","fullAnalysis":"完整分析，分段输出"}
 
 类型：${report.type}
 可信度：${report.confidence}
@@ -105,11 +136,11 @@ ${(report.strengths || []).map((item) => `- ${item}`).join("\n")}
 已有成长提醒：
 ${(report.growth || []).map((item) => `- ${item}`).join("\n")}
 
-请输出：
-1. 300 字以内总体解读
-2. 三条最值得相信的结论
-3. 两条需要谨慎解读的地方
-4. 学习/工作/关系三个场景建议
+fullAnalysis 请包含：
+1. 总体解读
+2. 最值得相信的三个结论
+3. 需要谨慎解读的两个地方
+4. 学习、工作、关系三个场景建议
 5. 一句轻幽默总结
 `.trim();
 }
